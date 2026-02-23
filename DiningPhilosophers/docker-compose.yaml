@@ -1,0 +1,76 @@
+services:
+  redis:
+    image: redis:6
+    networks:
+      - dining-philosophers
+
+  actor-service:
+    build:
+      context: ..
+      dockerfile: ./DiningPhilosophers/Dockerfile
+    environment:
+      - NUMBER_OF_PHILOSOPHERS=100
+      - TYPE=SERVICE
+    networks:
+      - dining-philosophers
+
+  actor-service-dapr:
+    image: "daprio/daprd:edge"
+    command: [
+      "./daprd",
+      "--app-id", "philosopher-service",
+      "--app-port", "3000", # Matches your Spring/Ktor port
+      "--placement-host-address", "placement:50006",
+      "--scheduler-host-address", "scheduler:50007",
+      "--resources-path", "/components"
+    ]
+    volumes:
+      - "./components/:/components"
+    depends_on:
+      - actor-service
+    network_mode: "service:actor-service"
+
+  actor-client:
+    build:
+      context: ..
+      dockerfile: ./DiningPhilosophers/Dockerfile
+    environment:
+      - NUMBER_OF_PHILOSOPHERS=100
+      - TYPE=CLIENT
+    networks:
+      - dining-philosophers
+    depends_on:
+      - actor-service-dapr
+
+  actor-client-dapr:
+    image: "daprio/daprd:edge"
+    command: [
+      "./daprd",
+      "--app-id", "philosopher-client",
+      "--placement-host-address", "placement:50006",
+      "--scheduler-host-address", "scheduler:50007",
+      "--resources-path", "/components"
+    ]
+    volumes:
+      - "./components/:/components"
+    depends_on:
+      - actor-client
+    network_mode: "service:actor-client"
+
+  placement:
+    image: "daprio/placement:edge"
+    command: ["./placement", "--port", "50006"]
+    networks:
+      - dining-philosophers
+
+  scheduler:
+    image: "daprio/scheduler:edge"
+    command: ["./scheduler", "--port", "50007", "--etcd-data-dir", "/data"]
+    user: root
+    volumes:
+      - "./dapr-etcd-data/:/data"
+    networks:
+      - dining-philosophers
+
+networks:
+  dining-philosophers:
