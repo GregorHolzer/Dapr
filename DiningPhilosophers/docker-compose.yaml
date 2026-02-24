@@ -8,67 +8,55 @@ services:
     build:
       context: ..
       dockerfile: ./DiningPhilosophers/Dockerfile
+    image: dining-philosophers-dapr:latest
     environment:
-      - NUMBER_OF_PHILOSOPHERS=100
       - TYPE=SERVICE
+      - HOST_ARBITRATOR_ACTOR=true
+      - NUMBER_OF_PHILOSOPHERS=10
+      - HOST_PHILOSOPHER_PUBSUB=true
+      - HOSTED_PHILOSOPHERS=0-9
     networks:
       - dining-philosophers
 
-  actor-service-dapr:
+  actor-service-sidecar:
     image: "daprio/daprd:edge"
     command: [
       "./daprd",
       "--app-id", "philosopher-service",
-      "--app-port", "3000", # Matches your Spring/Ktor port
+      "--app-port", "3000",
+      "--resources-path", "/components",
       "--placement-host-address", "placement:50006",
-      "--scheduler-host-address", "scheduler:50007",
-      "--resources-path", "/components"
     ]
     volumes:
-      - "./components/:/components"
-    depends_on:
-      - actor-service
+      - "./components:/components"
     network_mode: "service:actor-service"
 
   actor-client:
-    build:
-      context: ..
-      dockerfile: ./DiningPhilosophers/Dockerfile
+    image: dining-philosophers-dapr:latest
+    pull_policy: never
     environment:
-      - NUMBER_OF_PHILOSOPHERS=100
       - TYPE=CLIENT
     networks:
       - dining-philosophers
     depends_on:
-      - actor-service-dapr
+      - actor-service
 
-  actor-client-dapr:
+  actor-client-sidecar:
     image: "daprio/daprd:edge"
     command: [
       "./daprd",
       "--app-id", "philosopher-client",
+      "--app-port", "3000",
+      "--resources-path", "/components",
       "--placement-host-address", "placement:50006",
-      "--scheduler-host-address", "scheduler:50007",
-      "--resources-path", "/components"
     ]
     volumes:
-      - "./components/:/components"
-    depends_on:
-      - actor-client
+      - "./components:/components"
     network_mode: "service:actor-client"
 
   placement:
     image: "daprio/placement:edge"
     command: ["./placement", "--port", "50006"]
-    networks:
-      - dining-philosophers
-
-  scheduler:
-    image: "daprio/scheduler:edge"
-    command: ["./scheduler", "--port", "50007", "--etcd-data-dir", "/data"]
-    user: root
-    volumes:
-      - "./dapr-etcd-data/:/data"
     networks:
       - dining-philosophers
 

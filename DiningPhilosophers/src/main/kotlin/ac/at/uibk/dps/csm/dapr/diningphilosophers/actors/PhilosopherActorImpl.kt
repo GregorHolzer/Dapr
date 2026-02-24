@@ -1,34 +1,37 @@
 package ac.at.uibk.dps.csm.dapr.diningphilosophers.actors
 
+import ac.at.uibk.dps.csm.dapr.diningphilosophers.subsciber.ArbitratorSub
 import io.dapr.actors.ActorId
-import io.dapr.actors.client.ActorClient
-import io.dapr.actors.client.ActorProxyBuilder
 import io.dapr.actors.runtime.AbstractActor
 import io.dapr.actors.runtime.ActorRuntimeContext
+import io.dapr.client.DaprClient
 import reactor.core.publisher.Mono
 import java.time.Duration
 
 class PhilosopherActorImpl(
   runtimeContext: ActorRuntimeContext<PhilosopherActorImpl>,
   val tablePosition: Int,
-  arbitratorId: ActorId,
-  client: ActorClient
+  val client: DaprClient
 ): AbstractActor(runtimeContext, ActorId(tablePosition.toString())), PhilosopherActor {
 
-  val arbitratorProxy: ArbitratorActor = ActorProxyBuilder(ArbitratorActor::class.java, client)
-    .build(arbitratorId)
 
   override fun start(): Mono<Void> {
     println("Created Philosopher with position $tablePosition")
-    val msg = PhilosopherMessage(tablePosition, this.id.toString())
-    return arbitratorProxy.requestForks(msg)
+    return client.publishEvent(
+      ArbitratorSub.PUB_SUB_NAME,
+      ArbitratorSub.REQUEST_FORKS_TOPIC_NAME,
+      tablePosition
+    )
   }
 
   override fun eat(): Mono<Void> {
-    return Mono.delay(Duration.ofSeconds(1))
-      .then(Mono.fromRunnable<Void> {
-        println("Philosopher at position $tablePosition has eaten")
-      })
-      .then(arbitratorProxy.doneEating(tablePosition))
+    return Mono.delay(Duration.ofSeconds(1)).flatMap {
+      println("Philosopher at position $tablePosition has eaten")
+      client.publishEvent(
+        ArbitratorSub.PUB_SUB_NAME,
+        ArbitratorSub.DONE_EATING_TOPIC_NAME,
+        tablePosition
+      )
+    }
   }
 }

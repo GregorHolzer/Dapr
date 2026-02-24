@@ -1,48 +1,47 @@
 package ac.at.uibk.dps.csm.dapr.diningphilosophers.actors
 
+import ac.at.uibk.dps.csm.dapr.diningphilosophers.subsciber.ClientSub
+import ac.at.uibk.dps.csm.dapr.diningphilosophers.subsciber.PhilosopherSub
 import io.dapr.actors.ActorId
-import io.dapr.actors.client.ActorClient
-import io.dapr.actors.client.ActorProxyBuilder
 import io.dapr.actors.runtime.AbstractActor
 import io.dapr.actors.runtime.ActorRuntimeContext
+import io.dapr.client.DaprClient
 import reactor.core.publisher.Mono
 
 class ArbitratorActorImpl(
   runtimeContext: ActorRuntimeContext<ArbitratorActorImpl>,
   id: ActorId,
   val numberOfPhilosophers: Int,
-  val client: ActorClient
+  val client: DaprClient
 ): AbstractActor(runtimeContext, id), ArbitratorActor {
 
   private val forks = Array(numberOfPhilosophers) { true }
-  private var waitingPhilosophers: MutableMap<Int, ActorId> = HashMap(numberOfPhilosophers)
+  private var waitingPhilosophers: MutableSet<Int> = HashSet()
   private var donePhilosophers: Int = 0
 
-  private val philosopherProxy: (ActorId) -> PhilosopherActor = { id ->
-    ActorProxyBuilder(PhilosopherActor::class.java, client).build(id)
-  }
-
-  override fun requestForks(msg: PhilosopherMessage): Mono<Void> {
-    if (msg.position in 0 until numberOfPhilosophers) {
-      return tryAssignForks(msg.position, ActorId(msg.id))
+  override fun requestForks(position: Int): Mono<Void> {
+    if (position in 0 until numberOfPhilosophers) {
+      tryAssignForks(position)
     } else {
-      println("Received invalid philosopher position: ${msg.position}")
-      return Mono.empty()
+      println("Received invalid philosopher position: $position")
     }
+    return Mono.empty()
   }
 
-  private fun tryAssignForks(position: Int, id: ActorId): Mono<Void> {
+  private fun tryAssignForks(position: Int) {
     val nextForkIdx = (position + 1) % numberOfPhilosophers
     if (forks[position] && forks[nextForkIdx]) {
       forks[position] = false
       forks[nextForkIdx] = false
       waitingPhilosophers.remove(position)
-      philosopherProxy(id).eat().subscribe()
-      return Mono.empty()
+      client.publishEvent(
+        PhilosopherSub.PUB_SUB_NAME,
+        PhilosopherSub.EAT_TOPIC_NAME,
+        position
+      ).subscribe()
     } else {
       println("Adding actor at position $position to waiting list...")
-      waitingPhilosophers[position] = id
-      return Mono.empty()
+      waitingPhilosophers.add(position)
     }
   }
 
@@ -50,21 +49,23 @@ class ArbitratorActorImpl(
     donePhilosophers++
     if (donePhilosophers >= numberOfPhilosophers) {
       println("All philosophers have eaten!")
-      return Mono.empty()
+      return client.publishEvent(
+        ClientSub.PUB_SUB_NAME,
+        ClientSub.STOP_TOPIC_NAME,
+        Unit
+      )
     }
     val nextPhilosopherIdx = (philosopherPosition + 1) % numberOfPhilosophers
     val prevPhilosopherIdx = (philosopherPosition - 1 + numberOfPhilosophers) % numberOfPhilosophers
     forks[philosopherPosition] = true
     forks[(philosopherPosition + 1) % numberOfPhilosophers] = true  // free the correct fork
 
-    val nextPhilosopher = waitingPhilosophers[nextPhilosopherIdx]?.let {
-      tryAssignForks(nextPhilosopherIdx, it)
-    }?: Mono.empty()
-
-    val prevPhilosopher = waitingPhilosophers[prevPhilosopherIdx]?.let {
-      tryAssignForks(prevPhilosopherIdx, it)
-    }?: Mono.empty()
-
-    return Mono.`when`(nextPhilosopher, prevPhilosopher)
+    if (waitingPhilosophers.contains(nextPhilosopherIdx)) {
+      tryAssignForks(nextPhilosopherIdx)
+    }
+    if(waitingPhilosophers.contains(prevPhilosopherIdx)) {
+      tryAssignForks(prevPhilosopherIdx)
+    }
+    return Mono.empty()
   }
 }
