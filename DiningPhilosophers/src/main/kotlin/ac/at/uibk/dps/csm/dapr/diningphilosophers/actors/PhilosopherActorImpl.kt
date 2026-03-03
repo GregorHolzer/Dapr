@@ -11,9 +11,12 @@ import java.time.Duration
 class PhilosopherActorImpl(
   runtimeContext: ActorRuntimeContext<PhilosopherActorImpl>,
   val tablePosition: Int,
+  val eatingRounds: Int,
+  val eatingDuration: Int,
   val client: DaprClient
 ): AbstractActor(runtimeContext, ActorId(tablePosition.toString())), PhilosopherActor {
 
+  var completedRounds: Int = 0
 
   override fun start(): Mono<Void> {
     println("Created Philosopher with position $tablePosition")
@@ -25,13 +28,25 @@ class PhilosopherActorImpl(
   }
 
   override fun eat(): Mono<Void> {
-    return Mono.delay(Duration.ofSeconds(1)).flatMap {
-      println("Philosopher at position $tablePosition has eaten")
+    completedRounds++
+    val delay = Mono.delay(Duration.ofMillis(eatingDuration.toLong())).flatMap {
+      //
       client.publishEvent(
         ArbitratorSub.PUB_SUB_NAME,
         ArbitratorSub.DONE_EATING_TOPIC_NAME,
         tablePosition
       )
     }
+    if (completedRounds < eatingRounds) {
+      return delay.then(Mono.defer {
+        client.publishEvent(
+          ArbitratorSub.PUB_SUB_NAME,
+          ArbitratorSub.REQUEST_FORKS_TOPIC_NAME,
+          tablePosition
+        )
+      })
+    }
+    println("Philosopher at position $tablePosition is done")
+    return delay
   }
 }

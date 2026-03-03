@@ -10,6 +10,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/DiningPhilosophers" />
+            <option value="$PROJECT_DIR$/SleepingBarber" />
           </set>
         </option>
       </GradleProjectSettings>
