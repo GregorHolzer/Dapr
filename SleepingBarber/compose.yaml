@@ -1,0 +1,117 @@
+services:
+  redis:
+    image: redis:6
+    networks:
+      - sleeping-barber
+
+  actor-service-0:
+    build:
+      context: ..
+      dockerfile: ./SleepingBarber/Dockerfile
+    image: sleeping-barber-dapr:latest
+    environment:
+      - TYPE=SERVICE
+      - HOST_WAITING_ROOM_SUB=true
+      - NUMBER_OF_WAITING_SLOTS=3
+      - NUMBER_OF_CUSTOMERS=10
+      - HOST_CUSTOMER_PUBSUB=true
+      - NUMBER_OF_CUSTOMER_ROUNDS=10
+      - HOSTED_CUSTOMERS=5-9
+      - DAPR_HTTP_ENDPOINT=http://actor-service-0-sidecar:3500
+      - DAPR_GRPC_ENDPOINT=http://actor-service-0-sidecar:50001
+    networks:
+      - cluster0
+      - sleeping-barber
+
+  actor-service-0-sidecar:
+    image: "daprio/daprd:edge"
+    command: [
+      "./daprd",
+      "--app-id", "barber-service-sidecar-0",
+      "--app-channel-address", "actor-service-0",
+      "--app-port", "3000",
+      "--resources-path", "/components",
+      "--placement-host-address", "placement0:50006",
+    ]
+    volumes:
+      - "./components:/components"
+    networks:
+      - cluster0
+      - sleeping-barber
+
+  actor-service-1:
+    image: sleeping-barber-dapr:latest
+    pull_policy: never
+    environment:
+      - TYPE=SERVICE
+      - HOST_BARBER_SUB=true
+      - BARBER_CUTTING_TIME_MS=10
+      - HOST_CUSTOMER_PUBSUB=true
+      - NUMBER_OF_CUSTOMER_ROUNDS=10
+      - HOSTED_CUSTOMERS=0-4
+      - DAPR_HTTP_ENDPOINT=http://actor-service-1-sidecar:3500
+      - DAPR_GRPC_ENDPOINT=http://actor-service-1-sidecar:50001
+    networks:
+      - cluster1
+
+  actor-service-1-sidecar:
+    image: "daprio/daprd:edge"
+    command: [
+      "./daprd",
+      "--app-id", "philosopher-service-sidecar-1",
+      "--app-channel-address", "actor-service-1",
+      "--app-port", "3000",
+      "--resources-path", "/components",
+      "--placement-host-address", "placement1:50006",
+    ]
+    volumes:
+      - "./components:/components"
+    networks:
+      - cluster1
+      - sleeping-barber
+
+  actor-client:
+    image: sleeping-barber-dapr:latest
+    pull_policy: never
+    environment:
+      - TYPE=CLIENT
+      - DAPR_HTTP_ENDPOINT=http://actor-client-sidecar:3500
+      - DAPR_GRPC_ENDPOINT=http://actor-client-sidecar:50001
+    networks:
+      - client
+    depends_on:
+      - actor-service-0
+      - actor-service-1
+
+  actor-client-sidecar:
+    image: "daprio/daprd:edge"
+    command: [
+      "./daprd",
+      "--app-id", "philosopher-client",
+      "--app-channel-address", "actor-client",
+      "--app-port", "3000",
+      "--resources-path", "/components",
+    ]
+    volumes:
+      - "./components:/components"
+    networks:
+      - client
+      - sleeping-barber
+
+  placement0:
+    image: "daprio/placement:edge"
+    command: ["./placement", "--port", "50006"]
+    networks:
+      - cluster0
+
+  placement1:
+    image: "daprio/placement:edge"
+    command: [ "./placement", "--port", "50006" ]
+    networks:
+      - cluster1
+
+networks:
+  sleeping-barber:
+  cluster0:
+  cluster1:
+  client:

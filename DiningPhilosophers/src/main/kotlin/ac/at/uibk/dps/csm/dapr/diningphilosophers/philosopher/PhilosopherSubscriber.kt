@@ -1,6 +1,5 @@
-package ac.at.uibk.dps.csm.dapr.diningphilosophers.subsciber
+package ac.at.uibk.dps.csm.dapr.diningphilosophers.philosopher
 
-import ac.at.uibk.dps.csm.dapr.diningphilosophers.actors.PhilosopherActor
 import io.dapr.Topic
 import io.dapr.actors.ActorId
 import io.dapr.actors.client.ActorClient
@@ -14,7 +13,7 @@ import reactor.core.publisher.Flux
 
 @RestController
 @ConditionalOnProperty(name = ["RUN_PHILOSOPHER_SUB"], havingValue = "true")
-class PhilosopherSub(val client: ActorClient) {
+class PhilosopherSubscriber(val client: ActorClient) {
 
   companion object {
     const val EAT_TOPIC_NAME = "eat"
@@ -26,18 +25,10 @@ class PhilosopherSub(val client: ActorClient) {
 
   val hostedPhilosophers = parseEnvList("HOSTED_PHILOSOPHERS")
 
-  private fun getPhilosopherProxy(id: Int): PhilosopherActor {
-    return ActorProxyBuilder(PhilosopherActor::class.java, client).build(ActorId(id.toString()))
-  }
-
   @Topic(name = EAT_TOPIC_NAME, pubsubName = PUB_SUB_NAME)
   @PostMapping("/eat")
   fun eat(@RequestBody event: CloudEvent<Int>) {
-    if (!hostedPhilosophers.contains(event.data)) {
-      return
-    }
-    val philosopher = philosopherActors[event.data]
-    philosopher!!.eat().subscribe()
+    philosopherActors[event.data]?.eat()?.subscribe()
   }
 
   @Topic(name = START_TOPIC_NAME, pubsubName = PUB_SUB_NAME)
@@ -45,7 +36,7 @@ class PhilosopherSub(val client: ActorClient) {
   fun start() {
     println("Subscriber: Starting dispatch for philosophers: $hostedPhilosophers")
     Flux.fromIterable(hostedPhilosophers)
-      .flatMap { pos -> getPhilosopherProxy(pos).start() }
+      .flatMap { pos -> philosopherActors[pos]!!.start() }
       .subscribe()
   }
 
@@ -62,5 +53,9 @@ class PhilosopherSub(val client: ActorClient) {
       }
     list.forEach { philosopherActors[it] = getPhilosopherProxy(it) }
     return list
+  }
+
+  private fun getPhilosopherProxy(id: Int): PhilosopherActor {
+    return ActorProxyBuilder(PhilosopherActor::class.java, client).build(ActorId(id.toString()))
   }
 }

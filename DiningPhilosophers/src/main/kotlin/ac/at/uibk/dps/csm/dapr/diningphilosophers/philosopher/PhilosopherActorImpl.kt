@@ -1,6 +1,6 @@
-package ac.at.uibk.dps.csm.dapr.diningphilosophers.actors
+package ac.at.uibk.dps.csm.dapr.diningphilosophers.philosopher
 
-import ac.at.uibk.dps.csm.dapr.diningphilosophers.subsciber.ArbitratorSub
+import ac.at.uibk.dps.csm.dapr.diningphilosophers.arbitrator.ArbitratorSubscriber
 import io.dapr.actors.ActorId
 import io.dapr.actors.runtime.AbstractActor
 import io.dapr.actors.runtime.ActorRuntimeContext
@@ -21,8 +21,8 @@ class PhilosopherActorImpl(
   override fun start(): Mono<Void> {
     println("Created Philosopher with position $tablePosition")
     return client.publishEvent(
-      ArbitratorSub.PUB_SUB_NAME,
-      ArbitratorSub.REQUEST_FORKS_TOPIC_NAME,
+      ArbitratorSubscriber.PUB_SUB_NAME,
+      ArbitratorSubscriber.REQUEST_FORKS_TOPIC_NAME,
       tablePosition,
     )
   }
@@ -33,8 +33,8 @@ class PhilosopherActorImpl(
       Mono.delay(Duration.ofMillis(eatingDuration.toLong())).flatMap {
         //
         client.publishEvent(
-          ArbitratorSub.PUB_SUB_NAME,
-          ArbitratorSub.DONE_EATING_TOPIC_NAME,
+          ArbitratorSubscriber.PUB_SUB_NAME,
+          ArbitratorSubscriber.DONE_EATING_TOPIC_NAME,
           tablePosition,
         )
       }
@@ -42,8 +42,8 @@ class PhilosopherActorImpl(
       return delay.then(
         Mono.defer {
           client.publishEvent(
-            ArbitratorSub.PUB_SUB_NAME,
-            ArbitratorSub.REQUEST_FORKS_TOPIC_NAME,
+            ArbitratorSubscriber.PUB_SUB_NAME,
+            ArbitratorSubscriber.REQUEST_FORKS_TOPIC_NAME,
             tablePosition,
           )
         }

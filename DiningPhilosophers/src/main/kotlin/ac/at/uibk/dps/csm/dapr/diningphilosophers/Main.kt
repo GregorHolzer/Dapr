@@ -1,9 +1,9 @@
 package ac.at.uibk.dps.csm.dapr.diningphilosophers
 
-import ac.at.uibk.dps.csm.dapr.diningphilosophers.actors.ArbitratorActorImpl
-import ac.at.uibk.dps.csm.dapr.diningphilosophers.actors.PhilosopherActorImpl
-import ac.at.uibk.dps.csm.dapr.diningphilosophers.subsciber.ArbitratorSub
-import ac.at.uibk.dps.csm.dapr.diningphilosophers.subsciber.PhilosopherSub
+import ac.at.uibk.dps.csm.dapr.diningphilosophers.arbitrator.ArbitratorActorImpl
+import ac.at.uibk.dps.csm.dapr.diningphilosophers.arbitrator.ArbitratorSubscriber
+import ac.at.uibk.dps.csm.dapr.diningphilosophers.philosopher.PhilosopherActorImpl
+import ac.at.uibk.dps.csm.dapr.diningphilosophers.philosopher.PhilosopherSubscriber
 import io.dapr.actors.ActorId
 import io.dapr.actors.client.ActorClient
 import io.dapr.actors.runtime.ActorRuntime
@@ -49,7 +49,7 @@ fun daprClient(port: Int) {
   sleep(5000)
   println("Starting philosophers...")
   daprClient
-    .publishEvent(PhilosopherSub.PUB_SUB_NAME, PhilosopherSub.START_TOPIC_NAME, Unit)
+    .publishEvent(PhilosopherSubscriber.PUB_SUB_NAME, PhilosopherSubscriber.START_TOPIC_NAME, Unit)
     .block()
 }
 
@@ -70,7 +70,7 @@ fun service(port: Int) {
     ActorRuntime.getInstance().registerActor(ArbitratorActorImpl::class.java) { context, _ ->
       ArbitratorActorImpl(
         context,
-        ActorId(ArbitratorSub.ARBITRATOR_NAME),
+        ActorId(ArbitratorSubscriber.ARBITRATOR_NAME),
         numberOfPhilosophers,
         eatingRounds,
         daprClient,

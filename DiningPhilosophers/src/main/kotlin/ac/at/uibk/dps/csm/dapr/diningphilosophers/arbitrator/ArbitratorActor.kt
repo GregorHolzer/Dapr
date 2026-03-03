@@ -1,4 +1,4 @@
-package ac.at.uibk.dps.csm.dapr.diningphilosophers.actors
+package ac.at.uibk.dps.csm.dapr.diningphilosophers.arbitrator
 
 import io.dapr.actors.ActorMethod
 import io.dapr.actors.ActorType

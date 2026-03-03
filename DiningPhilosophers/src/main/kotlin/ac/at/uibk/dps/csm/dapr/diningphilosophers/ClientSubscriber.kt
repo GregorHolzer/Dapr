@@ -1,5 +1,6 @@
-package ac.at.uibk.dps.csm.dapr.diningphilosophers.subsciber
+package ac.at.uibk.dps.csm.dapr.diningphilosophers
 
+import ac.at.uibk.dps.csm.dapr.diningphilosophers.philosopher.PhilosopherSubscriber
 import io.dapr.Topic
 import java.time.Duration
 import java.time.Instant
@@ -9,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @ConditionalOnProperty(name = ["IS_CLIENT"], havingValue = "true")
-class ClientSub {
+class ClientSubscriber {
   companion object {
     const val STOP_TOPIC_NAME = "stop"
     const val PUB_SUB_NAME = "client_pubsub"
@@ -17,7 +18,10 @@ class ClientSub {
 
   var startTime: Instant? = null
 
-  @Topic(name = PhilosopherSub.START_TOPIC_NAME, pubsubName = PhilosopherSub.PUB_SUB_NAME)
+  @Topic(
+    name = PhilosopherSubscriber.Companion.START_TOPIC_NAME,
+    pubsubName = PhilosopherSubscriber.Companion.PUB_SUB_NAME,
+  )
   @PostMapping("/start")
   fun start() {
     startTime = Instant.now()

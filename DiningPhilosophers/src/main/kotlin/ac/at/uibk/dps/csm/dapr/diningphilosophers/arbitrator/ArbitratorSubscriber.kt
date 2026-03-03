@@ -1,6 +1,5 @@
-package ac.at.uibk.dps.csm.dapr.diningphilosophers.subsciber
+package ac.at.uibk.dps.csm.dapr.diningphilosophers.arbitrator
 
-import ac.at.uibk.dps.csm.dapr.diningphilosophers.actors.ArbitratorActor
 import io.dapr.Topic
 import io.dapr.actors.ActorId
 import io.dapr.actors.client.ActorClient
@@ -13,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @ConditionalOnProperty(name = ["RUN_ARBITRATOR_SUB"], havingValue = "true")
-class ArbitratorSub(client: ActorClient) {
+class ArbitratorSubscriber(client: ActorClient) {
 
   companion object {
     const val REQUEST_FORKS_TOPIC_NAME = "requestForks"
