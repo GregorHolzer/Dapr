@@ -7,12 +7,7 @@ import reactor.core.publisher.Mono
 @ActorType(name = "ArbitratorActor")
 interface ArbitratorActor {
 
-  @ActorMethod(name= "requestForks")
-  fun requestForks(position: Int): Mono<Void>
+  @ActorMethod(name = "requestForks") fun requestForks(position: Int): Mono<Void>
 
-  @ActorMethod(name= "doneEating")
-  fun doneEating(philosopherPosition: Int): Mono<Void>
-
-
-
+  @ActorMethod(name = "doneEating") fun doneEating(philosopherPosition: Int): Mono<Void>
 }

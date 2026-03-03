@@ -13,8 +13,8 @@ class ArbitratorActorImpl(
   id: ActorId,
   val numberOfPhilosophers: Int,
   val eatingRounds: Int,
-  val client: DaprClient
-): AbstractActor(runtimeContext, id), ArbitratorActor {
+  val client: DaprClient,
+) : AbstractActor(runtimeContext, id), ArbitratorActor {
 
   private val forks = Array(numberOfPhilosophers) { true }
   private var waitingPhilosophers = Array(numberOfPhilosophers) { false }
@@ -35,11 +35,9 @@ class ArbitratorActorImpl(
       forks[position] = false
       forks[nextForkIdx] = false
       waitingPhilosophers[position] = false
-      client.publishEvent(
-        PhilosopherSub.PUB_SUB_NAME,
-        PhilosopherSub.EAT_TOPIC_NAME,
-        position
-      ).subscribe()
+      client
+        .publishEvent(PhilosopherSub.PUB_SUB_NAME, PhilosopherSub.EAT_TOPIC_NAME, position)
+        .subscribe()
     } else {
       waitingPhilosophers[position] = true
     }
@@ -49,24 +47,19 @@ class ArbitratorActorImpl(
     donePhilosophers++
     if (donePhilosophers >= numberOfPhilosophers * eatingRounds) {
       println("All philosophers have eaten $eatingRounds times!")
-      return client.publishEvent(
-        ClientSub.PUB_SUB_NAME,
-        ClientSub.STOP_TOPIC_NAME,
-        Unit
-      )
+      return client.publishEvent(ClientSub.PUB_SUB_NAME, ClientSub.STOP_TOPIC_NAME, Unit)
     }
     val nextPhilosopherIdx = (philosopherPosition + 1) % numberOfPhilosophers
     val prevPhilosopherIdx = (philosopherPosition - 1 + numberOfPhilosophers) % numberOfPhilosophers
     forks[philosopherPosition] = true
     forks[(philosopherPosition + 1) % numberOfPhilosophers] = true
-
     if (waitingPhilosophers[nextPhilosopherIdx]) {
       tryAssignForks(nextPhilosopherIdx)
     }
-    if(waitingPhilosophers[prevPhilosopherIdx]) {
+    if (waitingPhilosophers[prevPhilosopherIdx]) {
       tryAssignForks(prevPhilosopherIdx)
     }
-    if(waitingPhilosophers[philosopherPosition]){
+    if (waitingPhilosophers[philosopherPosition]) {
       tryAssignForks(philosopherPosition)
     }
     return Mono.empty()

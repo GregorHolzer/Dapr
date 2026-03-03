@@ -2,7 +2,7 @@ package ac.at.uibk.dps.csm.dapr.diningphilosophers.actors
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-class PhilosopherMessage (
+class PhilosopherMessage(
   @param:JsonProperty("position") val position: Int,
-  @param:JsonProperty("id") val id: String
+  @param:JsonProperty("id") val id: String,
 )

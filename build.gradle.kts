@@ -12,7 +12,7 @@ allprojects {
 
 subprojects {
   apply(plugin = "org.jetbrains.kotlin.jvm")
-
+  apply(plugin = "com.ncorti.ktfmt.gradle")
   java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
 
   dependencies {
@@ -25,6 +25,7 @@ subprojects {
   }
 
   tasks.withType<Test> { useJUnitPlatform() }
+  ktfmt { googleStyle() }
 }
 
 ktfmt { googleStyle() }

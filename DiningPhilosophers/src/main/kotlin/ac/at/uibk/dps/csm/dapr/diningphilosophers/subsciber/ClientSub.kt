@@ -1,11 +1,11 @@
 package ac.at.uibk.dps.csm.dapr.diningphilosophers.subsciber
 
 import io.dapr.Topic
+import java.time.Duration
+import java.time.Instant
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RestController
-import java.time.Duration
-import java.time.Instant
 
 @RestController
 @ConditionalOnProperty(name = ["IS_CLIENT"], havingValue = "true")
