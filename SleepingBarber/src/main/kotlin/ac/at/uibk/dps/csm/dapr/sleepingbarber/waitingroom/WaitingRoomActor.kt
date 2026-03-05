@@ -10,6 +10,4 @@ interface WaitingRoomActor {
   @ActorMethod(name = "newCustomerArrives") fun newCustomerArrives(customerId: Int): Mono<Void>
 
   @ActorMethod(name = "barberFinished") fun barberFinished(): Mono<Void>
-
-  @ActorMethod(name = "customerFinished") fun customerFinished(customerId: Int): Mono<Void>
 }

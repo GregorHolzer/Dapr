@@ -24,12 +24,9 @@ services:
       dockerfile: ./SleepingBarber/Dockerfile
     image: sleeping-barber-dapr:latest
     environment:
-      - TYPE=SERVICE
       - HOST_WAITING_ROOM_SUB=true
       - NUMBER_OF_WAITING_SLOTS=3
-      - NUMBER_OF_CUSTOMERS=10
       - HOST_CUSTOMER_PUBSUB=true
-      - NUMBER_OF_CUSTOMER_ROUNDS=10
       - HOSTED_CUSTOMERS=5-9
       - DAPR_HTTP_ENDPOINT=http://actor-service-0-sidecar:3500
       - DAPR_GRPC_ENDPOINT=http://actor-service-0-sidecar:50001
@@ -57,11 +54,8 @@ services:
     image: sleeping-barber-dapr:latest
     pull_policy: never
     environment:
-      - TYPE=SERVICE
       - HOST_BARBER_SUB=true
-      - BARBER_CUTTING_TIME_MS=10
       - HOST_CUSTOMER_PUBSUB=true
-      - NUMBER_OF_CUSTOMER_ROUNDS=10
       - HOSTED_CUSTOMERS=0-4
       - DAPR_HTTP_ENDPOINT=http://actor-service-1-sidecar:3500
       - DAPR_GRPC_ENDPOINT=http://actor-service-1-sidecar:50001
@@ -89,8 +83,6 @@ services:
     image: sleeping-barber-dapr:latest
     pull_policy: never
     environment:
-      - TYPE=SERVICE
-      - NUMBER_OF_CUSTOMER_ROUNDS=10
       - DAPR_HTTP_ENDPOINT=http://actor-service-2-sidecar:3500
       - DAPR_GRPC_ENDPOINT=http://actor-service-2-sidecar:50001
     networks:
