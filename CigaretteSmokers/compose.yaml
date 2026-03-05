@@ -1,18 +1,4 @@
 services:
-  influxdb:
-    image: influxdb:2.7
-    ports:
-     - "8086:8086"
-    environment:
-      - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=admin
-      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpassword
-      - DOCKER_INFLUXDB_INIT_ORG=dapr
-      - DOCKER_INFLUXDB_INIT_BUCKET=bucket
-      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=auth
-    networks:
-      - influx-net
-
   redis:
     image: redis:6
     networks:
@@ -35,7 +21,7 @@ services:
       - DAPR_GRPC_ENDPOINT=http://actor-service-0-sidecar:50001
     networks:
       - cluster0
-      - influx-net
+      - sleeping-barber
 
   actor-service-0-sidecar:
     image: "daprio/daprd:edge"
@@ -67,7 +53,6 @@ services:
       - DAPR_GRPC_ENDPOINT=http://actor-service-1-sidecar:50001
     networks:
       - cluster1
-      - influx-net
 
   actor-service-1-sidecar:
     image: "daprio/daprd:edge"
@@ -95,7 +80,6 @@ services:
       - DAPR_GRPC_ENDPOINT=http://actor-service-2-sidecar:50001
     networks:
       - cluster1
-      - influx-net
 
   actor-service-2-sidecar:
     image: "daprio/daprd:edge"
@@ -122,7 +106,6 @@ services:
       - DAPR_GRPC_ENDPOINT=http://actor-client-sidecar:50001
     networks:
       - client
-      - influx-net
     depends_on:
       - actor-service-0
       - actor-service-1
@@ -159,4 +142,3 @@ networks:
   cluster0:
   cluster1:
   client:
-  influx-net:

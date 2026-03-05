@@ -22,6 +22,11 @@ subprojects {
     implementation("io.dapr:dapr-sdk-springboot:1.16.0")
     implementation("commons-cli:commons-cli:1.9.0")
     implementation("org.springframework.boot:spring-boot-starter-web")
+
+    implementation("io.micrometer:micrometer-core:1.17.0-M1")
+    implementation("io.micrometer:micrometer-registry-influx:1.17.0-M1")
+    implementation("io.micrometer:micrometer-tracing:1.7.0-M1")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
   }
 
   tasks.withType<Test> { useJUnitPlatform() }

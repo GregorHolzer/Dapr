@@ -90,6 +90,7 @@ fun service(port: Int) {
     props["HOST_CUSTOMER_SUB"] = "true"
   }
   val cuttingRounds = System.getenv("NUMBER_OF_CUSTOMER_ROUNDS")?.toInt() ?: 10
+  val registry =
   ActorRuntime.getInstance().registerActor(CustomerActorImpl::class.java) { context, id ->
     CustomerActorImpl(context, id.toString().toInt(), cuttingRounds, daprClient)
   }
