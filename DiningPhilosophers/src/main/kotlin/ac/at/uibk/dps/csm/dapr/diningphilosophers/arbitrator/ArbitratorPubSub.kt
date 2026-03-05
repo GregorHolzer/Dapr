@@ -4,21 +4,39 @@ import io.dapr.Topic
 import io.dapr.actors.ActorId
 import io.dapr.actors.client.ActorClient
 import io.dapr.actors.client.ActorProxyBuilder
+import io.dapr.client.DaprClient
 import io.dapr.client.domain.CloudEvent
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
+import reactor.core.publisher.Mono
 
 @RestController
 @ConditionalOnProperty(name = ["RUN_ARBITRATOR_SUB"], havingValue = "true")
-class ArbitratorSubscriber(client: ActorClient) {
+class ArbitratorPubSub(client: ActorClient) {
 
   companion object {
     const val REQUEST_FORKS_TOPIC_NAME = "requestForks"
     const val DONE_EATING_TOPIC_NAME = "doneEating"
     const val PUB_SUB_NAME = "arbitrator_pub_sub"
     const val ARBITRATOR_NAME = "arbitrator"
+
+    fun requestForks(client: DaprClient, id: Int): Mono<Void> {
+      return client.publishEvent(
+        PUB_SUB_NAME,
+        REQUEST_FORKS_TOPIC_NAME,
+        id
+      )
+    }
+
+    fun doneEating(client: DaprClient, id: Int): Mono<Void> {
+      return client.publishEvent(
+        PUB_SUB_NAME,
+        DONE_EATING_TOPIC_NAME,
+        id
+      )
+    }
   }
 
   val arbitratorActor: ArbitratorActor =
@@ -26,13 +44,13 @@ class ArbitratorSubscriber(client: ActorClient) {
 
   @Topic(name = REQUEST_FORKS_TOPIC_NAME, pubsubName = PUB_SUB_NAME)
   @PostMapping("/requestForks")
-  fun requestForks(@RequestBody(required = true) event: CloudEvent<Int>) {
+  fun requestForksSubscriber(@RequestBody(required = true) event: CloudEvent<Int>) {
     arbitratorActor.requestForks(event.data).subscribe()
   }
 
   @Topic(name = DONE_EATING_TOPIC_NAME, pubsubName = PUB_SUB_NAME)
   @PostMapping("/doneEating")
-  fun doneEating(@RequestBody(required = true) event: CloudEvent<Int>) {
+  fun doneEatingSubscriber(@RequestBody(required = true) event: CloudEvent<Int>) {
     arbitratorActor.doneEating(event.data).subscribe()
   }
 }

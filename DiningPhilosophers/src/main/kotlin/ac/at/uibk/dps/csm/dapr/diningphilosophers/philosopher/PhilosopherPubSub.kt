@@ -4,21 +4,39 @@ import io.dapr.Topic
 import io.dapr.actors.ActorId
 import io.dapr.actors.client.ActorClient
 import io.dapr.actors.client.ActorProxyBuilder
+import io.dapr.client.DaprClient
 import io.dapr.client.domain.CloudEvent
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 @RestController
 @ConditionalOnProperty(name = ["RUN_PHILOSOPHER_SUB"], havingValue = "true")
-class PhilosopherSubscriber(val client: ActorClient) {
+class PhilosopherPubSub(val client: ActorClient) {
 
   companion object {
     const val EAT_TOPIC_NAME = "eat"
     const val START_TOPIC_NAME = "start"
     const val PUB_SUB_NAME = "philosopher_pub_sub"
+
+    fun start(client: DaprClient): Mono<Void> {
+      return client.publishEvent(
+        PUB_SUB_NAME,
+        START_TOPIC_NAME,
+        Unit
+      )
+    }
+
+    fun eat(client: DaprClient, id: Int): Mono<Void> {
+      return client.publishEvent(
+        PUB_SUB_NAME,
+        EAT_TOPIC_NAME,
+        id
+      )
+    }
   }
 
   val philosopherActors: MutableMap<Int, PhilosopherActor> = HashMap()
@@ -27,13 +45,13 @@ class PhilosopherSubscriber(val client: ActorClient) {
 
   @Topic(name = EAT_TOPIC_NAME, pubsubName = PUB_SUB_NAME)
   @PostMapping("/eat")
-  fun eat(@RequestBody event: CloudEvent<Int>) {
+  fun eatSubscriber(@RequestBody event: CloudEvent<Int>) {
     philosopherActors[event.data]?.eat()?.subscribe()
   }
 
   @Topic(name = START_TOPIC_NAME, pubsubName = PUB_SUB_NAME)
   @PostMapping("/start")
-  fun start() {
+  fun startSubscriber() {
     println("Subscriber: Starting dispatch for philosophers: $hostedPhilosophers")
     Flux.fromIterable(hostedPhilosophers)
       .flatMap { pos -> philosopherActors[pos]!!.start() }

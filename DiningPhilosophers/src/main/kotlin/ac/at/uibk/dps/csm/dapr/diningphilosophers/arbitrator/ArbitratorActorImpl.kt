@@ -1,7 +1,6 @@
 package ac.at.uibk.dps.csm.dapr.diningphilosophers.arbitrator
 
-import ac.at.uibk.dps.csm.dapr.diningphilosophers.ClientSubscriber
-import ac.at.uibk.dps.csm.dapr.diningphilosophers.philosopher.PhilosopherSubscriber
+import ac.at.uibk.dps.csm.dapr.diningphilosophers.philosopher.PhilosopherPubSub
 import io.dapr.actors.ActorId
 import io.dapr.actors.runtime.AbstractActor
 import io.dapr.actors.runtime.ActorRuntimeContext
@@ -35,13 +34,7 @@ class ArbitratorActorImpl(
       forks[position] = false
       forks[nextForkIdx] = false
       waitingPhilosophers[position] = false
-      client
-        .publishEvent(
-          PhilosopherSubscriber.PUB_SUB_NAME,
-          PhilosopherSubscriber.EAT_TOPIC_NAME,
-          position,
-        )
-        .subscribe()
+      PhilosopherPubSub.eat(client, position).subscribe()
     } else {
       waitingPhilosophers[position] = true
     }
@@ -49,14 +42,10 @@ class ArbitratorActorImpl(
 
   override fun doneEating(philosopherPosition: Int): Mono<Void> {
     donePhilosophers++
-    if (donePhilosophers >= numberOfPhilosophers * eatingRounds) {
+    /*if (donePhilosophers >= numberOfPhilosophers * eatingRounds) {
       println("All philosophers have eaten $eatingRounds times!")
-      return client.publishEvent(
-        ClientSubscriber.PUB_SUB_NAME,
-        ClientSubscriber.STOP_TOPIC_NAME,
-        Unit,
-      )
-    }
+      return ClientPubSub.stop(client)
+    }*/
     val nextPhilosopherIdx = (philosopherPosition + 1) % numberOfPhilosophers
     val prevPhilosopherIdx = (philosopherPosition - 1 + numberOfPhilosophers) % numberOfPhilosophers
     forks[philosopherPosition] = true

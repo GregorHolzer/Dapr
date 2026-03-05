@@ -1,10 +1,11 @@
 package ac.at.uibk.dps.csm.dapr.diningphilosophers.philosopher
 
-import ac.at.uibk.dps.csm.dapr.diningphilosophers.arbitrator.ArbitratorSubscriber
+import ac.at.uibk.dps.csm.dapr.diningphilosophers.arbitrator.ArbitratorPubSub
 import io.dapr.actors.ActorId
 import io.dapr.actors.runtime.AbstractActor
 import io.dapr.actors.runtime.ActorRuntimeContext
 import io.dapr.client.DaprClient
+import io.micrometer.core.instrument.Metrics
 import java.time.Duration
 import reactor.core.publisher.Mono
 
@@ -18,38 +19,29 @@ class PhilosopherActorImpl(
 
   var completedRounds: Int = 0
 
+  var metricsCounter = Metrics.counter("total_meals")
+
   override fun start(): Mono<Void> {
     println("Created Philosopher with position $tablePosition")
-    return client.publishEvent(
-      ArbitratorSubscriber.PUB_SUB_NAME,
-      ArbitratorSubscriber.REQUEST_FORKS_TOPIC_NAME,
-      tablePosition,
-    )
+    return ArbitratorPubSub.requestForks(client, tablePosition)
   }
 
   override fun eat(): Mono<Void> {
     completedRounds++
+    metricsCounter.increment()
     val delay =
       Mono.delay(Duration.ofMillis(eatingDuration.toLong())).flatMap {
-        //
-        client.publishEvent(
-          ArbitratorSubscriber.PUB_SUB_NAME,
-          ArbitratorSubscriber.DONE_EATING_TOPIC_NAME,
-          tablePosition,
-        )
+        ArbitratorPubSub.doneEating(client, tablePosition)
       }
-    if (completedRounds < eatingRounds) {
+    return delay.then(
+      ArbitratorPubSub.requestForks(client, tablePosition)
+    )
+    /*if (completedRounds < eatingRounds) {
       return delay.then(
-        Mono.defer {
-          client.publishEvent(
-            ArbitratorSubscriber.PUB_SUB_NAME,
-            ArbitratorSubscriber.REQUEST_FORKS_TOPIC_NAME,
-            tablePosition,
-          )
-        }
+        ArbitratorPubSub.requestForks(client, tablePosition)
       )
     }
     println("Philosopher at position $tablePosition is done")
-    return delay
+    return delay*/
   }
 }
