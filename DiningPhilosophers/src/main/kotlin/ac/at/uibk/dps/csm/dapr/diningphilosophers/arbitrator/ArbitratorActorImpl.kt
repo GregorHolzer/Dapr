@@ -5,15 +5,20 @@ import io.dapr.actors.ActorId
 import io.dapr.actors.runtime.AbstractActor
 import io.dapr.actors.runtime.ActorRuntimeContext
 import io.dapr.client.DaprClient
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import reactor.core.publisher.Mono
 
 class ArbitratorActorImpl(
   runtimeContext: ActorRuntimeContext<ArbitratorActorImpl>,
   id: ActorId,
   val numberOfPhilosophers: Int,
-  val eatingRounds: Int,
   val client: DaprClient,
 ) : AbstractActor(runtimeContext, id), ArbitratorActor {
+
+  companion object {
+    val logger: Logger? = LoggerFactory.getLogger(ArbitratorActorImpl::class.java)
+  }
 
   private val forks = Array(numberOfPhilosophers) { true }
   private var waitingPhilosophers = Array(numberOfPhilosophers) { false }
@@ -23,7 +28,7 @@ class ArbitratorActorImpl(
     if (position in 0 until numberOfPhilosophers) {
       tryAssignForks(position)
     } else {
-      println("Received invalid philosopher position: $position")
+      logger!!.info("Received invalid philosopher position: $position")
     }
     return Mono.empty()
   }
@@ -42,10 +47,6 @@ class ArbitratorActorImpl(
 
   override fun doneEating(philosopherPosition: Int): Mono<Void> {
     donePhilosophers++
-    /*if (donePhilosophers >= numberOfPhilosophers * eatingRounds) {
-      println("All philosophers have eaten $eatingRounds times!")
-      return ClientPubSub.stop(client)
-    }*/
     val nextPhilosopherIdx = (philosopherPosition + 1) % numberOfPhilosophers
     val prevPhilosopherIdx = (philosopherPosition - 1 + numberOfPhilosophers) % numberOfPhilosophers
     forks[philosopherPosition] = true

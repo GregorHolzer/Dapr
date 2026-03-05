@@ -24,13 +24,10 @@ services:
       dockerfile: ./DiningPhilosophers/Dockerfile
     image: dining-philosophers-dapr:latest
     environment:
-      - TYPE=SERVICE
       - HOST_ARBITRATOR_ACTOR=true
       - HOST_PHILOSOPHER_PUBSUB=true
       - NUMBER_OF_PHILOSOPHERS=6
       - HOSTED_PHILOSOPHERS=0-2
-      - PHILOSOPHER_EATING_ROUNDS=16000
-      - PHILOSOPHER_EATING_TIME_MS=0
       - DAPR_HTTP_ENDPOINT=http://actor-service-0-sidecar:3500
       - DAPR_GRPC_ENDPOINT=http://actor-service-0-sidecar:50001
     networks:
@@ -60,12 +57,8 @@ services:
       dockerfile: ./DiningPhilosophers/Dockerfile
     image: dining-philosophers-dapr:latest
     environment:
-      - TYPE=SERVICE
       - HOST_PHILOSOPHER_PUBSUB=true
-      - NUMBER_OF_PHILOSOPHERS=6
       - HOSTED_PHILOSOPHERS=3-5
-      - PHILOSOPHER_EATING_ROUNDS=16000
-      - PHILOSOPHER_EATING_TIME_MS=0
       - DAPR_HTTP_ENDPOINT=http://actor-service-1-sidecar:3500
       - DAPR_GRPC_ENDPOINT=http://actor-service-1-sidecar:50001
     networks:

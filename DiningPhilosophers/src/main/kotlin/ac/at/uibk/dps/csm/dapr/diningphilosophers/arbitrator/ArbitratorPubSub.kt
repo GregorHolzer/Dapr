@@ -23,19 +23,11 @@ class ArbitratorPubSub(client: ActorClient) {
     const val ARBITRATOR_NAME = "arbitrator"
 
     fun requestForks(client: DaprClient, id: Int): Mono<Void> {
-      return client.publishEvent(
-        PUB_SUB_NAME,
-        REQUEST_FORKS_TOPIC_NAME,
-        id
-      )
+      return client.publishEvent(PUB_SUB_NAME, REQUEST_FORKS_TOPIC_NAME, id)
     }
 
     fun doneEating(client: DaprClient, id: Int): Mono<Void> {
-      return client.publishEvent(
-        PUB_SUB_NAME,
-        DONE_EATING_TOPIC_NAME,
-        id
-      )
+      return client.publishEvent(PUB_SUB_NAME, DONE_EATING_TOPIC_NAME, id)
     }
   }
 

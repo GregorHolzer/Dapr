@@ -12,17 +12,19 @@ import reactor.core.publisher.Mono
 class PhilosopherActorImpl(
   runtimeContext: ActorRuntimeContext<PhilosopherActorImpl>,
   val tablePosition: Int,
-  val eatingRounds: Int,
   val eatingDuration: Int,
   val client: DaprClient,
 ) : AbstractActor(runtimeContext, ActorId(tablePosition.toString())), PhilosopherActor {
 
+  companion object {
+    const val COUNTER_NAME = "total_meals"
+  }
+
   var completedRounds: Int = 0
 
-  var metricsCounter = Metrics.counter("total_meals")
+  var metricsCounter = Metrics.counter(COUNTER_NAME)
 
   override fun start(): Mono<Void> {
-    println("Created Philosopher with position $tablePosition")
     return ArbitratorPubSub.requestForks(client, tablePosition)
   }
 
@@ -33,15 +35,6 @@ class PhilosopherActorImpl(
       Mono.delay(Duration.ofMillis(eatingDuration.toLong())).flatMap {
         ArbitratorPubSub.doneEating(client, tablePosition)
       }
-    return delay.then(
-      ArbitratorPubSub.requestForks(client, tablePosition)
-    )
-    /*if (completedRounds < eatingRounds) {
-      return delay.then(
-        ArbitratorPubSub.requestForks(client, tablePosition)
-      )
-    }
-    println("Philosopher at position $tablePosition is done")
-    return delay*/
+    return delay.then(ArbitratorPubSub.requestForks(client, tablePosition))
   }
 }

@@ -23,19 +23,11 @@ class PhilosopherPubSub(val client: ActorClient) {
     const val PUB_SUB_NAME = "philosopher_pub_sub"
 
     fun start(client: DaprClient): Mono<Void> {
-      return client.publishEvent(
-        PUB_SUB_NAME,
-        START_TOPIC_NAME,
-        Unit
-      )
+      return client.publishEvent(PUB_SUB_NAME, START_TOPIC_NAME, Unit)
     }
 
     fun eat(client: DaprClient, id: Int): Mono<Void> {
-      return client.publishEvent(
-        PUB_SUB_NAME,
-        EAT_TOPIC_NAME,
-        id
-      )
+      return client.publishEvent(PUB_SUB_NAME, EAT_TOPIC_NAME, id)
     }
   }
 
