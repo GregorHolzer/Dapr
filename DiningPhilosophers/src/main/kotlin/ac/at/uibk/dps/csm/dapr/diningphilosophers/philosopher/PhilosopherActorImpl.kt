@@ -22,7 +22,7 @@ class PhilosopherActorImpl(
 
   var completedRounds: Int = 0
 
-  var metricsCounter = Metrics.counter(COUNTER_NAME)
+  var metricsCounter = Metrics.counter(COUNTER_NAME, "philosopher", tablePosition.toString())
 
   override fun start(): Mono<Void> {
     return ArbitratorPubSub.requestForks(client, tablePosition)
