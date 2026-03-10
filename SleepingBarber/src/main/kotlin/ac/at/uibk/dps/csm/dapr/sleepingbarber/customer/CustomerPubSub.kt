@@ -73,7 +73,7 @@ class CustomerPubSub(val client: ActorClient) {
           listOf(part.trim().toInt())
         }
       }
-    SleepingBarber.logger.info("Manage Pub Sub for Philosophers: $list")
+    SleepingBarber.logger.info("Manage Pub Sub for Barbers: $list")
     list.forEach { customerActors[it] = getPhilosopherProxy(it) }
     return list
   }

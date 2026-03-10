@@ -10,13 +10,9 @@ services:
       - DOCKER_INFLUXDB_INIT_ORG=org
       - DOCKER_INFLUXDB_INIT_BUCKET=bucket
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=bzO10KmR8x
-    networks:
-      - influxdb
 
   redis:
     image: redis:6
-    networks:
-      - dining-philosophers
 
 ### Services
 
@@ -30,9 +26,6 @@ services:
       - NUMBER_OF_PHILOSOPHERS=6
       - DAPR_HTTP_ENDPOINT=http://arbitrator-sidecar:3500
       - DAPR_GRPC_ENDPOINT=http://arbitrator-sidecar:50001
-    networks:
-      - cluster0
-      - influxdb
 
   arbitrator-sidecar:
     image: "daprio/daprd:edge"
@@ -42,13 +35,10 @@ services:
       "--app-channel-address", "arbitrator",
       "--app-port", "3000",
       "--resources-path", "/components",
-      "--placement-host-address", "placement:50006",
+      "--placement0-host-address", "placement00:50006",
     ]
     volumes:
       - "./components:/components"
-    networks:
-      - cluster0
-      - dining-philosophers
 
   w0:
     image: dining-philosophers-dapr:latest
@@ -57,9 +47,6 @@ services:
       - HOSTED_PHILOSOPHERS=0
       - DAPR_HTTP_ENDPOINT=http://w0-sidecar:3500
       - DAPR_GRPC_ENDPOINT=http://w0-sidecar:50001
-    networks:
-      - cluster0
-      - influxdb
 
   w0-sidecar:
     image: "daprio/daprd:edge"
@@ -69,13 +56,10 @@ services:
       "--app-channel-address", "w0",
       "--app-port", "3000",
       "--resources-path", "/components",
-      "--placement-host-address", "placement:50006",
+      "--placement0-host-address", "placement0:50006",
     ]
     volumes:
       - "./components:/components"
-    networks:
-      - cluster0
-      - dining-philosophers
 
   w1:
     image: dining-philosophers-dapr:latest
@@ -84,9 +68,6 @@ services:
       - HOSTED_PHILOSOPHERS=1
       - DAPR_HTTP_ENDPOINT=http://w1-sidecar:3500
       - DAPR_GRPC_ENDPOINT=http://w1-sidecar:50001
-    networks:
-      - cluster0
-      - influxdb
 
   w1-sidecar:
     image: "daprio/daprd:edge"
@@ -96,13 +77,10 @@ services:
       "--app-channel-address", "w1",
       "--app-port", "3000",
       "--resources-path", "/components",
-      "--placement-host-address", "placement:50006",
+      "--placement-host-address", "placement0:50006",
     ]
     volumes:
       - "./components:/components"
-    networks:
-      - cluster0
-      - dining-philosophers
 
   w2:
     image: dining-philosophers-dapr:latest
@@ -111,9 +89,6 @@ services:
       - HOSTED_PHILOSOPHERS=2
       - DAPR_HTTP_ENDPOINT=http://w2-sidecar:3500
       - DAPR_GRPC_ENDPOINT=http://w2-sidecar:50001
-    networks:
-      - cluster0
-      - influxdb
 
   w2-sidecar:
     image: "daprio/daprd:edge"
@@ -123,13 +98,10 @@ services:
       "--app-channel-address", "w2",
       "--app-port", "3000",
       "--resources-path", "/components",
-      "--placement-host-address", "placement:50006",
+      "--placement-host-address", "placement0:50006",
     ]
     volumes:
       - "./components:/components"
-    networks:
-      - cluster0
-      - dining-philosophers
 
   w3:
     image: dining-philosophers-dapr:latest
@@ -138,9 +110,6 @@ services:
       - HOSTED_PHILOSOPHERS=3
       - DAPR_HTTP_ENDPOINT=http://w3-sidecar:3500
       - DAPR_GRPC_ENDPOINT=http://w3-sidecar:50001
-    networks:
-      - cluster1
-      - influxdb
 
   w3-sidecar:
     image: "daprio/daprd:edge"
@@ -150,13 +119,10 @@ services:
       "--app-channel-address", "w3",
       "--app-port", "3000",
       "--resources-path", "/components",
-      "--placement-host-address", "placement:50006",
+      "--placement-host-address", "placement1:50006",
     ]
     volumes:
       - "./components:/components"
-    networks:
-      - cluster1
-      - dining-philosophers
 
   w4:
     image: dining-philosophers-dapr:latest
@@ -165,9 +131,6 @@ services:
       - HOSTED_PHILOSOPHERS=4
       - DAPR_HTTP_ENDPOINT=http://w4-sidecar:3500
       - DAPR_GRPC_ENDPOINT=http://w4-sidecar:50001
-    networks:
-      - cluster1
-      - influxdb
 
   w4-sidecar:
     image: "daprio/daprd:edge"
@@ -177,13 +140,10 @@ services:
       "--app-channel-address", "w4",
       "--app-port", "3000",
       "--resources-path", "/components",
-      "--placement-host-address", "placement:50006",
+      "--placement-host-address", "placement1:50006",
     ]
     volumes:
       - "./components:/components"
-    networks:
-      - cluster1
-      - dining-philosophers
 
   w5:
     image: dining-philosophers-dapr:latest
@@ -192,9 +152,6 @@ services:
       - HOSTED_PHILOSOPHERS=5
       - DAPR_HTTP_ENDPOINT=http://w5-sidecar:3500
       - DAPR_GRPC_ENDPOINT=http://w5-sidecar:50001
-    networks:
-      - cluster1
-      - influxdb
 
   w5-sidecar:
     image: "daprio/daprd:edge"
@@ -204,13 +161,10 @@ services:
       "--app-channel-address", "w5",
       "--app-port", "3000",
       "--resources-path", "/components",
-      "--placement-host-address", "placement:50006",
+      "--placement-host-address", "placement1:50006",
     ]
     volumes:
       - "./components:/components"
-    networks:
-      - cluster1
-      - dining-philosophers
 
 ### Client:
 
@@ -221,8 +175,6 @@ services:
       - TYPE=CLIENT
       - DAPR_HTTP_ENDPOINT=http://actor-client-sidecar:3500
       - DAPR_GRPC_ENDPOINT=http://actor-client-sidecar:50001
-    networks:
-      - client
     depends_on:
       - w0
       - w1
@@ -243,23 +195,9 @@ services:
     ]
     volumes:
       - "./components:/components"
-    networks:
-      - client
-      - dining-philosophers
 
 ### Placement
 
   placement:
     image: "daprio/placement:edge"
     command: ["./placement", "--port", "50006"]
-    networks:
-      - dining-philosophers
-      - cluster0
-      - cluster1
-
-networks:
-  dining-philosophers:
-  influxdb:
-  cluster0:
-  cluster1:
-  client:
