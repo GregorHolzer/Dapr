@@ -1,5 +1,6 @@
 package ac.at.uibk.dps.csm.dapr.sleepingbarber.customer
 
+import ac.at.uibk.dps.csm.dapr.sleepingbarber.SleepingBarber
 import io.dapr.Topic
 import io.dapr.actors.ActorId
 import io.dapr.actors.client.ActorClient
@@ -72,6 +73,7 @@ class CustomerPubSub(val client: ActorClient) {
           listOf(part.trim().toInt())
         }
       }
+    SleepingBarber.logger.info("Manage Pub Sub for Philosophers: $list")
     list.forEach { customerActors[it] = getPhilosopherProxy(it) }
     return list
   }

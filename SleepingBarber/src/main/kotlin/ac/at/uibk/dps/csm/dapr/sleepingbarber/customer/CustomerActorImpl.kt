@@ -20,7 +20,7 @@ class CustomerActorImpl(
 
   var completedRounds = 0
 
-  var metricsCounter = Metrics.counter(COUNTER_NAME)
+  var metricsCounter = Metrics.counter(COUNTER_NAME, "customer", customerId.toString())
 
   override fun enterWaitingRoom(): Mono<Void> {
     return WaitingRoomPubSub.newCustomer(client, customerId)
