@@ -39,16 +39,10 @@ class AutoStarter : ApplicationRunner {
 
   override fun run(args: ApplicationArguments?) {
     val role = System.getenv("ROLE") ?: "philosopher"
-
     if (role == "arbitrator") return
-
     val id = System.getenv("PHILOSOPHER_ID")
-
-    val proxy =
-      ActorProxyBuilder(PhilosopherActor::class.java, ActorClient()).build(ActorId(id))
-
+    val proxy = ActorProxyBuilder(PhilosopherActor::class.java, ActorClient()).build(ActorId(id))
     DiningPhilosophers.logger.info("philosopher requesting initial forks")
-
     proxy.start().subscribe()
   }
 }
